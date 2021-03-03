@@ -1,10 +1,14 @@
-###########################################Erdbeben######################################################
+########################################## Erdbeben #####################################################
+###################################### Datensatz aufbereiten ############################################
+
+####################################### Vorab ###########################################################
 install.packages("readxl")
 library(readxl)
 library(tidyverse)
 library(ggplot2)
+setwd("C:/Users/FR/Documents/Erdbeben/StatPra2021")
+
 ############## Daten einlesen #########################################################################
-pfad <- setwd("C:/Users/FR/Documents/Erdbeben/StatPra2021")
 #### Tabellen einlesen 
 japan_erdbeben <- read_xlsx("Japan_Earthquakes_210228.xlsx", sheet = 1)
 japan_triggered <- read_xlsx("Japan_triggerRelations_210228.xlsx", sheet = 1)
@@ -16,7 +20,9 @@ japan_daten <- left_join(japan_erdbeben, japan_triggered, by = "eventID")
 
 
 ### Spalte erstellen, wo man festlegt welches Erdbeben welches triggert
+##### Spalte erstellen
 japan_daten <- mutate(japan_daten, Triggering = -1)
+#### Erbeben x triggert Erbeben y 
 for (i in 1:length(japan_daten$eventID)) {
   if(japan_daten$triggeredFrom[i] != -1){
     evID1 <- japan_daten$triggeredFrom[i]
@@ -40,7 +46,7 @@ for (i in 1:length(japan_daten$eventID)) {
   }
 }
 
-### extra Spalte mit Magnitude dem triggerendem Erdbeben
+### extra Spalte mit Magnitude vom triggerendem Erdbeben
 japan_daten <- mutate(japan_daten,triggeringMag = 0)
 
 for(i in 1:length(japan_daten$triggeredFrom)){
@@ -50,8 +56,11 @@ for(i in 1:length(japan_daten$triggeredFrom)){
     japan_daten$triggeringMag[i] <- japan_daten$mag[evID]
   }
 }
+
+### überflüssige Variablen löschen
 remove(evID,i)
-### Einzelbeben aus Datensatz rausnehmen
+
+### Einzelbeben aus Datensatz rausfiltern
 japan_triggering <- filter(japan_daten, Triggering != -1)
 japan_triggered <- filter(japan_daten, triggeredFrom != -1)
 
@@ -68,7 +77,7 @@ japan_daten$triggeredFrom[japan_daten$triggeredFrom == -1] <- NA
 japan_daten$Triggering[japan_daten$Triggering == -1] <- NA
 japan_daten$triggeringMag[japan_daten$triggeringMag == -1] <- NA
 
-### Differnenz der Magnituden Werte erstellen
+### Differenz der Magnituden Werte erstellen
 japan_daten <- mutate(japan_daten, DifferenzMag = triggeringMag - mag)
 
 ### Erdbeben, die während Short Incompletless stattfinden rausfiltern
