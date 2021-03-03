@@ -40,6 +40,17 @@ for (i in 1:length(japan_daten$eventID)) {
   }
 }
 
+### extra Spalte mit Magnitude dem triggerendem Erdbeben
+japan_daten <- mutate(japan_daten,triggeringMag = 0)
+
+for(i in 1:length(japan_daten$triggeredFrom)){
+  if(japan_daten$triggeredFrom[i] == -1)  japan_daten$triggeringMag[i] <- -1
+  else {
+    evID <- japan_daten$triggeredFrom[i]
+    japan_daten$triggeringMag[i] <- japan_daten$mag[evID]
+  }
+}
+remove(evID,i)
 ### Einzelbeben aus Datensatz rausnehmen
 japan_triggering <- filter(japan_daten, Triggering != -1)
 japan_triggered <- filter(japan_daten, triggeredFrom != -1)
@@ -50,18 +61,20 @@ japan_ohneEB <- union(japan_triggered, japan_triggering) %>%
 ### sortieren der Daten nach EventID
 japan_ohneEB <- japan_ohneEB[order(japan_ohneEB$eventID), ]
 
-remove(japan_erdbeben, japan_triggered, japan_triggering, evID1, evID2, i)
+remove(japan_erdbeben, japan_triggered, japan_triggering, evID1, evID2)
 
-### evtl. extra Spalte mit Magnitude dem triggerendem Erdbeben
-japan_ohneEB <- mutate(japan_ohneEB,triggeringMag = 0)
+### Erdbeben die nichts triggeren oder nicht getriggertet werden gleich NA setzen
+japan_daten$triggeredFrom[japan_daten$triggeredFrom == -1] <- NA 
+japan_daten$Triggering[japan_daten$Triggering == -1] <- NA
+japan_daten$triggeringMag[japan_daten$triggeringMag == -1] <- NA
 
-for(i in 1:length(japan_ohneEB$triggeredFrom)){
-  if(japan_ohneEB$triggeredFrom[i] == -1)  japan_ohneEB$triggeringMag[i] <- -1
-  else {
-    evID <- japan_ohneEB$triggeredFrom[i]
-    japan_ohneEB$triggeringMag[i] <- japan_daten$mag[evID]
-  }
-}
+### Differnenz der Magnituden Werte erstellen
+japan_daten <- mutate(japan_daten, DifferenzMag = triggeringMag - mag)
 
-remove(evID,i)
+### Erdbeben, die während Short Incompletless stattfinden rausfiltern
+japan_ohneShortInc <- filter(japan_daten, isBlind == FALSE)
 
+### Datensätze abspeichern
+save(japan_daten, file = "Japan_aufbereitet.RData")
+save(japan_ohneEB, file = "Japan_ohneEinzelbeben.RData")
+save(japan_ohneShortInc, file = "Japan_ohneShortIncompletness.RData")
