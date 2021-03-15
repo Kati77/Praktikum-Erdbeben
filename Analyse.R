@@ -8,35 +8,10 @@ pfad <- setwd("C:/Users/FR/Documents/Erdbeben/StatPra2021")
 japan_erdbeben <- read_xlsx("Japan_Earthquakes_210228.xlsx", sheet = 1)
 japan_triggered <- read_xlsx("Japan_triggerRelations_210228.xlsx", sheet = 1)
 
-### Tabellen zusammenfügen
+### Tabellen zusammenfÃ¼gen
 japan_triggered$eventID <- japan_triggered$evID 
 japan_triggered <- japan_triggered[,-1]
 japan_daten <- left_join(japan_erdbeben, japan_triggered, by = "eventID")
-
-### Spalte erstellen, wo man festlegt welches Erdbeben welches triggert
-japan_daten <- mutate(japan_daten, Triggering = -1)
-for (i in 1:length(japan_daten$eventID)) {
-  if(japan_daten$triggeredFrom[i] != -1){
-    evID1 <- japan_daten$triggeredFrom[i]
-    evID2 <- japan_daten$eventID[i]
-    if(japan_daten$Triggering[evID1] == -1){
-    japan_daten$Triggering[japan_daten$eventID == evID1] <- evID2
-    }
-    else japan_daten <- 
-      rbind(japan_daten, 
-            data.frame(eventID = evID1, date = japan_daten$date[evID1],
-                       t = japan_daten$t[evID1], lon = japan_daten$lon[evID1],
-                       lat = japan_daten$lat[evID1], mag = japan_daten$mag[evID1],
-                       depth = japan_daten$depth[evID1], strike = japan_daten$strike[evID1],
-                       dip = japan_daten$dip[evID1], rake = japan_daten$rake[evID1], 
-                       strainRate = japan_daten$strainRate[evID1], heatFlow = japan_daten$heatFlow[evID1],
-                       crustalThick = japan_daten$crustalThick[evID1], 
-                       mantleThick = japan_daten$mantleThick[evID1], elevation = japan_daten$elevation[evID1],
-                       isBlind = japan_daten$isBlind[evID1], distanceMeasure = japan_daten$distanceMeasure[evID1],
-                       triggeredFrom = japan_daten$triggeredFrom[evID1], 
-                       Triggering = evID2))
-  }
-}
 
 ### extra Spalte mit Magnitude dem triggerendem Erdbeben
 japan_daten <- mutate(japan_daten,triggeringMag = 0)
@@ -60,19 +35,13 @@ japan_ohneEB <- union(japan_triggered, japan_triggering) %>%
 japan_ohneEB <- japan_ohneEB[order(japan_ohneEB$eventID), ]
 
 remove(japan_erdbeben, japan_triggered, japan_triggering, evID1, evID2)
-
 ### Erdbeben die nichts triggeren oder nicht getriggertet werden gleich NA setzen
 japan_daten$triggeredFrom[japan_daten$triggeredFrom == -1] <- NA 
-japan_daten$Triggering[japan_daten$Triggering == -1] <- NA
 japan_daten$triggeringMag[japan_daten$triggeringMag == -1] <- NA
 
 ### Differnenz der Magnituden Werte erstellen
 japan_daten <- mutate(japan_daten, DifferenzMag = triggeringMag - mag)
+japan_reg <- rename( japan_daten,triggeredMag = mag) 
 
-### Erdbeben, die während Short Incompletless stattfinden rausfiltern
-japan_ohneShortInc <- filter(japan_daten, isBlind == FALSE)
-
-### Datensätze speichern
-save(japan_daten, file = "Japan_aufbereitet.RData")
-save(japan_ohneEB, file = "Japan_ohneEinzelbeben.RData")
-save(japan_ohneShortInc, file = "Japan_ohneShortIncompletness.RData")
+### Differnenz der Magnituden Werte erstellen
+japan_daten <- mutate(japan_daten, DifferenzMag = triggeringMag - mag)
