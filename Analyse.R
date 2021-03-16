@@ -13,7 +13,8 @@ japan_triggered$eventID <- japan_triggered$evID
 japan_triggered <- japan_triggered[,-1]
 japan_daten <- left_join(japan_erdbeben, japan_triggered, by = "eventID")
 
-### extra Spalte mit Magnitude dem triggerendem Erdbeben
+
+### extra Spalte mit Magnitude des triggerenden Erdbeben
 japan_daten <- mutate(japan_daten,triggeringMag = 0)
 
 for(i in 1:length(japan_daten$triggeredFrom)){
@@ -23,25 +24,33 @@ for(i in 1:length(japan_daten$triggeredFrom)){
     japan_daten$triggeringMag[i] <- japan_daten$mag[evID]
   }
 }
-remove(evID,i)
-### Einzelbeben aus Datensatz rausnehmen
-japan_triggering <- filter(japan_daten, Triggering != -1)
-japan_triggered <- filter(japan_daten, triggeredFrom != -1)
+remove(evID,i, japan_erdbeben, japan_triggered)
 
-japan_ohneEB <- union(japan_triggered, japan_triggering) %>%
-  distinct()
+### Clustervariable
+japan_daten <- mutate(japan_daten, Cluster = -1)
+j <- 0
+for (i in 1:length(japan_daten$eventID)){
+ if(japan_daten$triggeredFrom[i] != -1){
+   IDtriggering <- japan_daten$triggeredFrom[i]
+   
+    if(japan_daten$Cluster[IDtriggering] != -1){
+      Clusternr <- japan_daten$Cluster[IDtriggering]
+      japan_daten$Cluster[i] <- Clusternr
+    }
+    if(japan_daten$Cluster[IDtriggering] == -1) {
+      j <- j + 1
+      japan_daten$Cluster[IDtriggering] <- j
+      japan_daten$Cluster[i] <- j
+    }
+ }
+}
 
-### sortieren der Daten nach EventID
-japan_ohneEB <- japan_ohneEB[order(japan_ohneEB$eventID), ]
+### Spalte umbennen
+japan_daten <- japan_daten %>%
+  rename(triggeredMag = mag)
 
-remove(japan_erdbeben, japan_triggered, japan_triggering, evID1, evID2)
-### Erdbeben die nichts triggeren oder nicht getriggertet werden gleich NA setzen
-japan_daten$triggeredFrom[japan_daten$triggeredFrom == -1] <- NA 
-japan_daten$triggeringMag[japan_daten$triggeringMag == -1] <- NA
+### Erstellen von Datensatz mit nur Beben die auch getriggert werden
+japan_reg <- filter(japan_daten, triggeringMag != -1)
 
-### Differnenz der Magnituden Werte erstellen
-japan_daten <- mutate(japan_daten, DifferenzMag = triggeringMag - mag)
-japan_reg <- rename( japan_daten,triggeredMag = mag) 
+remove(Clusternr, i, IDtriggering, j)
 
-### Differnenz der Magnituden Werte erstellen
-japan_daten <- mutate(japan_daten, DifferenzMag = triggeringMag - mag)
