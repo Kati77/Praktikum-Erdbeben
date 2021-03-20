@@ -6,11 +6,12 @@ library(readxl)
 library(tidyverse)
 library(ggplot2)
 
+setwd("C:/Users/FR/Documents/Erdbeben/StatPra2021")
+
 ######################################################################################################
 ################################### Japan Daten ######################################################
 ######################################################################################################
-
-setwd("C:/Users/FR/Documents/Erdbeben/StatPra2021")
+{
 ### Tabellen einlesen 
 japan_erdbeben <- read_xlsx("Japan_Earthquakes_210228.xlsx", sheet = 1)
 japan_triggered <- read_xlsx("Japan_triggerRelations_210318.xlsx", sheet = 1)
@@ -78,13 +79,13 @@ japan_reg <- japan_final%>%
 
 remove(evID,i, japan_erdbeben, japan_triggered)
 
-
+}
 
 #######################################################################################################
 ################################ California Daten #####################################################
 #######################################################################################################
 
-
+{
 cali_erdbeben <- read_xlsx("California_Earthquakes_210318.xlsx", sheet = 1)
 cali_triggered <- read_xlsx("California_triggerRelations_210318.xlsx", sheet = 1)
 
@@ -151,3 +152,4 @@ cali_reg <- cali_final%>%
 
 remove(evID,i, cali_erdbeben, cali_triggered)
 
+}
