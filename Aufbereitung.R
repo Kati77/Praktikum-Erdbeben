@@ -5,12 +5,12 @@
 library(readxl)
 library(tidyverse)
 library(ggplot2)
-
 setwd("C:/Users/FR/Documents/Erdbeben/StatPra2021")
 
 ######################################################################################################
 ################################### Japan Daten ######################################################
 ######################################################################################################
+
 {
 ### Tabellen einlesen 
 japan_erdbeben <- read_xlsx("Japan_Earthquakes_210228.xlsx", sheet = 1)
@@ -44,10 +44,10 @@ remove(Clusternr, i, IDtriggering, j)
 ### Datensatz umstellen
 japan_final <- japan_daten %>%
   mutate(triggeringMag = 0) %>%
-  mutate(triggeringT = 0)
+  mutate(triggeringT = 0) 
 
 
-for(i in 1:length(japan_final$triggeredFrom)){
+for(i in 1:length(japan_final$eventID)){
   if(japan_final$triggeredFrom[i] != -1){
     evID <- japan_final$triggeredFrom[i]
     japan_final$triggeringT[i] <- japan_daten$t[evID]
@@ -75,9 +75,26 @@ japan_reg <- japan_final%>%
   rename(triggeredIsBlind = isBlind) %>%
   rename(triggeredDistanceMeasure = distanceMeasure) %>%
   mutate(timediff = triggeredT - triggeringT) %>%
+  mutate(rake_modified = 0) %>%
   filter(triggeringBeben != -1)
 
+japan_reg$depth <- japan_reg$depth * (-1)
+
+function(){
+  if(japan_reg$rake >= 0)  japan_reg$rake_modified = 90 - abs(japan_reg$rake - 90)
+  if(japan_reg$rake < 0) japan_reg$rake_modified = - 90 + abs(japan_reg$rake + 90) 
+}
+
+### Spalte berechnen mit der spezifischen Zeitdifferenz
+japan_reg$triggeredIsBlind <- as.factor(japan_reg$triggeredIsBlind)
+
 remove(evID,i, japan_erdbeben, japan_triggered)
+
+japan_regOS <- filter(japan_reg, triggeredIsBlind == FALSE)
+japan_regOS2 <- filter(japan_reg, isBlind2 == FALSE)
+
+japan_timediff <- filter(japan_reg, timediff <= 2)
+
 
 }
 
@@ -97,7 +114,7 @@ remove(cali_erdbeben, cali_triggered)
 ### Clustervariable
 cali_daten<- mutate(cali_daten, Cluster = -1)
 j <- 0
-for (i in 1:length(ccali_daten$eventID)){
+for (i in 1:length(cali_daten$eventID)){
   if(cali_daten$triggeredFrom[i] != -1){
     IDtriggering <- cali_daten$triggeredFrom[i]
     
@@ -148,8 +165,26 @@ cali_reg <- cali_final%>%
   rename(triggeredIsBlind = isBlind) %>%
   rename(triggeredDistanceMeasure = distanceMeasure) %>%
   mutate(timediff = triggeredT - triggeringT) %>%
+  mutate(rake_modified = 0)
   filter(triggeringBeben != -1)
 
-remove(evID,i, cali_erdbeben, cali_triggered)
+remove(evID,i)
+
+cali_reg$depth <- cali_reg$depth * (-1)
+cali_reg$triggeredIsBlind <- as.factor(cali_reg$triggeredIsBlind)
+
+cali_regOS <- filter(cali_reg, triggeredIsBlind == FALSE)
+
+function(){
+  if(cali_reg$rake >= 0)  cali_reg$rake_modified = 90 - abs(cali_reg$rake - 90)
+  if(cali_reg$rake < 0) cali_reg$rake_modified = - 90 + abs(cali_reg$rake + 90) 
+}
 
 }
+
+######################## Datensätze zusammenfügen
+japan_reg1 <- mutate(japan_reg, Country = 0)
+cali_reg1 <- mutate(cali_reg, Country = 1)
+daten_all <- union(japan_reg1, cali_reg1)
+
+remove(japan_reg1, cali_reg1)
