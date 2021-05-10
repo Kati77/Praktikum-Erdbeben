@@ -179,7 +179,7 @@ function(){
   if(cali_reg$rake >= 0)  cali_reg$rake_modified = 90 - abs(cali_reg$rake - 90)
   if(cali_reg$rake < 0) cali_reg$rake_modified = - 90 + abs(cali_reg$rake + 90) 
 }
-
+cali_timediff <- filter(cali_reg, timediff <= 2)
 }
 
 ######################## Datensätze zusammenfügen
