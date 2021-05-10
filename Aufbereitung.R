@@ -94,6 +94,7 @@ japan_regOS <- filter(japan_reg, triggeredIsBlind == FALSE)
 japan_regOS2 <- filter(japan_reg, isBlind2 == FALSE)
 
 japan_timediff <- filter(japan_reg, timediff <= 2)
+japan_timediffOS <- filter(japan_timediff, triggeredIsBlind == FALSE)
 
 
 }
@@ -180,6 +181,7 @@ function(){
   if(cali_reg$rake < 0) cali_reg$rake_modified = - 90 + abs(cali_reg$rake + 90) 
 }
 cali_timediff <- filter(cali_reg, timediff <= 2)
+cali_timediffOS <- filter(cali_timediff, triggeredIsBlind == FALSE)
 }
 
 ######################## Datensätze zusammenfügen
