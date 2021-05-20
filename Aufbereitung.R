@@ -13,7 +13,7 @@ setwd("C:/Users/FR/Documents/Erdbeben/StatPra2021")
 
 {
 ### Tabellen einlesen 
-japan_erdbeben <- read_xlsx("Japan_Earthquakes_210228.xlsx", sheet = 1)
+japan_erdbeben <- read_xlsx("Japan_Earthquakes_210515.xlsx", sheet = 1)
 japan_triggered <- read_xlsx("Japan_triggerRelations_210318.xlsx", sheet = 1)
 
 ### Tabellen zusammenfügen
@@ -80,21 +80,26 @@ japan_reg <- japan_final%>%
 
 japan_reg$depth <- japan_reg$depth * (-1)
 
-function(){
-  if(japan_reg$rake >= 0)  japan_reg$rake_modified = 90 - abs(japan_reg$rake - 90)
-  if(japan_reg$rake < 0) japan_reg$rake_modified = - 90 + abs(japan_reg$rake + 90) 
+
+for(j in seq_along(japan_reg$rake)){
+  if(japan_reg$rake[j] >= 0)  japan_reg$rake_modified[j] = 90 - abs(japan_reg$rake[j] - 90)
+  if(japan_reg$rake[j] < 0) japan_reg$rake_modified[j] = - 90 + abs(japan_reg$rake[j] + 90) 
+  if(japan_reg$complMagn[j] == 4) japan_reg$triggeredIsBlind[j] <- TRUE
+  if(japan_reg$complMagn[j] > 4) japan_reg$triggeredIsBlind[j] <- FALSE
+  if(japan_reg$timediff[j] > 10) japan_reg$timediff[j] <- 10
 }
 
+
+
 ### Spalte berechnen mit der spezifischen Zeitdifferenz
-japan_reg$triggeredIsBlind <- as.factor(japan_reg$triggeredIsBlind)
+#japan_reg$triggeredIsBlind <- as.factor(japan_reg$triggeredIsBlind)
 
-remove(evID,i, japan_erdbeben, japan_triggered)
+remove(evID, i, j,japan_erdbeben, japan_triggered)
 
-japan_regOS <- filter(japan_reg, triggeredIsBlind == FALSE)
-japan_regOS2 <- filter(japan_reg, isBlind2 == FALSE)
+#japan_regOS <- filter(japan_reg, triggeredIsBlind == FALSE)
+#japan_regOS2 <- filter(japan_reg, isBlind2 == FALSE)
 
-japan_timediff <- filter(japan_reg, timediff <= 2)
-japan_timediffOS <- filter(japan_timediff, triggeredIsBlind == FALSE)
+#japan_timediff <- filter(japan_reg, timediff <= 2)
 
 
 }
@@ -104,7 +109,7 @@ japan_timediffOS <- filter(japan_timediff, triggeredIsBlind == FALSE)
 #######################################################################################################
 
 {
-cali_erdbeben <- read_xlsx("California_Earthquakes_210318.xlsx", sheet = 1)
+cali_erdbeben <- read_xlsx("California_Earthquakes_210515.xlsx", sheet = 1)
 cali_triggered <- read_xlsx("California_triggerRelations_210318.xlsx", sheet = 1)
 
 ### Tabellen zusammenfügen
@@ -166,27 +171,29 @@ cali_reg <- cali_final%>%
   rename(triggeredIsBlind = isBlind) %>%
   rename(triggeredDistanceMeasure = distanceMeasure) %>%
   mutate(timediff = triggeredT - triggeringT) %>%
-  mutate(rake_modified = 0)
+  mutate(rake_modified = 0) %>%
   filter(triggeringBeben != -1)
 
+cali_reg$depth <- cali_reg$depth * (-1)
 remove(evID,i)
 
-cali_reg$depth <- cali_reg$depth * (-1)
-cali_reg$triggeredIsBlind <- as.factor(cali_reg$triggeredIsBlind)
+#cali_reg$depth <- cali_reg$depth * (-1)
+#cali_reg$triggeredIsBlind <- as.factor(cali_reg$triggeredIsBlind)
 
-cali_regOS <- filter(cali_reg, triggeredIsBlind == FALSE)
+#cali_regOS <- filter(cali_reg, triggeredIsBlind == FALSE)
 
-function(){
-  if(cali_reg$rake >= 0)  cali_reg$rake_modified = 90 - abs(cali_reg$rake - 90)
-  if(cali_reg$rake < 0) cali_reg$rake_modified = - 90 + abs(cali_reg$rake + 90) 
-}
-cali_timediff <- filter(cali_reg, timediff <= 2)
-cali_timediffOS <- filter(cali_timediff, triggeredIsBlind == FALSE)
+for(j in seq_along(cali_reg$rake)){
+  if(cali_reg$rake[j] >= 0)  cali_reg$rake_modified[j] = 90 - abs(japan_reg$rake[j] - 90)
+  if(cali_reg$rake[j] < 0) cali_reg$rake_modified[j] = - 90 + abs(japan_reg$rake[j] + 90) 
+  if(cali_reg$complMagn[j] == 4) cali_reg$triggeredIsBlind[j] <- TRUE
+  if(cali_reg$complMagn[j] > 4) cali_reg$triggeredIsBlind[j] <- FALSE
+  if(cali_reg$timediff[j] > 10) cali_reg$timediff[j] <- 10
+ }
 }
 
 ######################## Datensätze zusammenfügen
-japan_reg1 <- mutate(japan_reg, Country = 0)
-cali_reg1 <- mutate(cali_reg, Country = 1)
-daten_all <- union(japan_reg1, cali_reg1)
+#japan_reg1 <- mutate(japan_reg, Country = 0)
+#cali_reg1 <- mutate(cali_reg, Country = 1)
+#daten_all <- union(japan_reg1, cali_reg1)
 
 remove(japan_reg1, cali_reg1)
